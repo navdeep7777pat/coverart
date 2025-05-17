@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -30,11 +31,13 @@ export async function generateCoverArt(input: GenerateCoverArtInput): Promise<Ge
   return generateCoverArtFlow(input);
 }
 
+// This prompt object is defined but not directly used by the generateCoverArtFlow below,
+// which uses ai.generate directly. It's kept here for potential future use or reference.
 const prompt = ai.definePrompt({
   name: 'generateCoverArtPrompt',
   input: {schema: GenerateCoverArtInputSchema},
   output: {schema: GenerateCoverArtOutputSchema},
-  prompt: `Generate cover art for the song "{{{songTitle}}}" by {{{artistName}}}. The cover art should visually represent the song's theme.`, // DO NOT include a Handlebars helper function here. This is invalid.
+  prompt: `Generate cover art for the song "{{{songTitle}}}" by {{{artistName}}}. The cover art should visually represent the song's theme.`,
 });
 
 const generateCoverArtFlow = ai.defineFlow(
@@ -44,13 +47,24 @@ const generateCoverArtFlow = ai.defineFlow(
     outputSchema: GenerateCoverArtOutputSchema,
   },
   async input => {
-    const {media} = await ai.generate({
+    const response = await ai.generate({
       model: 'googleai/gemini-2.0-flash-exp',
-      prompt: `Generate cover art for the song "${input.songTitle}" by ${input.artistName}. The cover art should visually represent the song's theme.`, // Valid way to access input values.
+      prompt: `Generate cover art for the song "${input.songTitle}" by ${input.artistName}. The cover art should visually represent the song's theme.`,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
       },
     });
+
+    const media = response.media;
+
+    if (!media || !media.url) {
+      console.error(
+        'Image generation failed or did not return a media URL.',
+        'Input:', input,
+        'Response:', JSON.stringify(response, null, 2)
+      );
+      throw new Error('Failed to generate cover art image. The model did not return a valid image.');
+    }
 
     return {
       coverArtDataUri: media.url,
