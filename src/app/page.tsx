@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -12,11 +13,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Loader2, Music2, Wand2 } from "lucide-react";
+import { Download, Loader2, Music2, Wand2, Lightbulb } from "lucide-react";
 
 const formSchema = z.object({
   songTitle: z.string().min(1, "Song title is required").max(100, "Song title too long"),
   artistName: z.string().min(1, "Artist name is required").max(100, "Artist name too long"),
+  themeHint: z.string().max(150, "Theme hint too long").optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -31,6 +33,7 @@ export default function ArtifyPage() {
     defaultValues: {
       songTitle: "",
       artistName: "",
+      themeHint: "",
     },
   });
 
@@ -38,17 +41,32 @@ export default function ArtifyPage() {
     setIsLoading(true);
     setCoverArtDataUri(null); // Clear previous art
     try {
-      const result = await generateCoverArt(data as GenerateCoverArtInput);
-      setCoverArtDataUri(result.coverArtDataUri);
-      toast({
-        title: "Art Generated!",
-        description: "Your unique cover art is ready.",
-      });
+      // Ensure themeHint is passed, even if it's an empty string or undefined
+      const inputData: GenerateCoverArtInput = {
+        songTitle: data.songTitle,
+        artistName: data.artistName,
+        themeHint: data.themeHint || undefined, // Pass undefined if empty string
+      };
+      const result = await generateCoverArt(inputData);
+      
+      if (result.coverArtDataUri) {
+        setCoverArtDataUri(result.coverArtDataUri);
+        toast({
+          title: "Art Generated!",
+          description: "Your unique cover art is ready.",
+        });
+      } else {
+        throw new Error("Cover art URI was not returned.");
+      }
     } catch (error) {
       console.error("Error generating cover art:", error);
+      let description = "Something went wrong. Please try again.";
+      if (error instanceof Error) {
+        description = error.message || description;
+      }
       toast({
         title: "Error Generating Art",
-        description: "Something went wrong. Please try again or check the console for details.",
+        description: description,
         variant: "destructive",
       });
     } finally {
@@ -116,6 +134,24 @@ export default function ArtifyPage() {
                     <FormLabel htmlFor="artistName" className="text-foreground">Artist Name</FormLabel>
                     <FormControl>
                       <Input id="artistName" placeholder="e.g., The Starlights" {...field} className="focus:ring-accent focus:border-accent" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="themeHint"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel htmlFor="themeHint" className="text-foreground">
+                      <div className="flex items-center">
+                        <Lightbulb className="mr-2 h-4 w-4 text-muted-foreground" />
+                        Background Theme Hint (Optional)
+                      </div>
+                    </FormLabel>
+                    <FormControl>
+                      <Input id="themeHint" placeholder="e.g., mystical forest, neon city, abstract waves" {...field} className="focus:ring-accent focus:border-accent" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
