@@ -37,7 +37,7 @@ const prompt = ai.definePrompt({
   name: 'generateCoverArtPrompt',
   input: {schema: GenerateCoverArtInputSchema},
   output: {schema: GenerateCoverArtOutputSchema},
-  prompt: `Generate cover art for the song "{{{songTitle}}}" by {{{artistName}}}. The cover art should visually represent the song's theme.`,
+  prompt: `Generate cover art for the song "{{{songTitle}}}" by {{{artistName}}}. The cover art should visually represent the song's theme. Please ensure the song title, "{{{songTitle}}}", is prominently displayed on the cover art itself, rendered in a large and artistically appropriate font.`,
 });
 
 const generateCoverArtFlow = ai.defineFlow(
@@ -49,7 +49,7 @@ const generateCoverArtFlow = ai.defineFlow(
   async input => {
     const response = await ai.generate({
       model: 'googleai/gemini-2.0-flash-exp',
-      prompt: `Generate cover art for the song "${input.songTitle}" by ${input.artistName}. The cover art should visually represent the song's theme.`,
+      prompt: `Generate cover art for the song "${input.songTitle}" by ${input.artistName}. The cover art should visually represent the song's theme. Please ensure the song title, "${input.songTitle}", is prominently displayed on the cover art itself, rendered in a large and artistically appropriate font.`,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
       },
@@ -63,7 +63,7 @@ const generateCoverArtFlow = ai.defineFlow(
         'Input:', input,
         'Response:', JSON.stringify(response, null, 2)
       );
-      throw new Error('Failed to generate cover art image. The model did not return a valid image.');
+      throw new Error('Failed to generate cover art image. The model did not return a valid image or media URL.');
     }
 
     return {
@@ -71,3 +71,4 @@ const generateCoverArtFlow = ai.defineFlow(
     };
   }
 );
+
