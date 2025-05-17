@@ -22,7 +22,7 @@ export type GenerateCoverArtInput = z.infer<typeof GenerateCoverArtInputSchema>;
 const GenerateCoverArtOutputSchema = z.object({
   coverArtDataUri: z
     .string()
-    .optional() // Marking as optional as per previous fix attempt, will re-evaluate if this is correct
+    .optional() 
     .describe(
       'The generated cover art as a data URI that must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.'
     ),
@@ -33,14 +33,11 @@ export async function generateCoverArt(input: GenerateCoverArtInput): Promise<Ge
   return generateCoverArtFlow(input);
 }
 
-// This prompt object is defined but not directly used by the generateCoverArtFlow below,
-// which uses ai.generate directly. It's kept here for potential future use or reference.
-// Note: The prompt string in this object needs to be updated if it's ever used, to include the themeHint.
 const prompt = ai.definePrompt({
   name: 'generateCoverArtPrompt',
   input: {schema: GenerateCoverArtInputSchema},
   output: {schema: GenerateCoverArtOutputSchema},
-  prompt: `Generate cover art for the song "{{{songTitle}}}" by {{{artistName}}}. The cover art should visually represent the song's theme. {{#if themeHint}}The background theme should be inspired by: "{{{themeHint}}}".{{/if}} Please ensure the song title, "{{{songTitle}}}", is prominently displayed on the cover art itself, rendered in a large and artistically appropriate font.`,
+  prompt: `Generate cover art for the song "{{{songTitle}}}" by {{{artistName}}}. The cover art should visually represent the song's theme. The background should be in a realistic style. {{#if themeHint}}The background theme should be inspired by: "{{{themeHint}}}".{{/if}} Please ensure the song title, "{{{songTitle}}}", is prominently displayed on the cover art itself, rendered in a large and artistically appropriate font.`,
 });
 
 const generateCoverArtFlow = ai.defineFlow(
@@ -50,7 +47,7 @@ const generateCoverArtFlow = ai.defineFlow(
     outputSchema: GenerateCoverArtOutputSchema,
   },
   async (input: GenerateCoverArtInput) => {
-    let promptText = `Generate cover art for the song "${input.songTitle}" by ${input.artistName}. The cover art should visually represent the song's theme.`;
+    let promptText = `Generate cover art for the song "${input.songTitle}" by ${input.artistName}. The cover art should visually represent the song's theme. The background of the cover art must be in a realistic style.`;
     if (input.themeHint && input.themeHint.trim() !== "") {
       promptText += ` The background theme or style should be inspired by: "${input.themeHint}".`;
     }
@@ -73,7 +70,6 @@ const generateCoverArtFlow = ai.defineFlow(
         'Prompt Text:', promptText,
         'Response:', JSON.stringify(response, null, 2)
       );
-      // Consider the case where the model might still provide text output even if image fails
       const textOutput = response.text;
       let errorMessage = 'Failed to generate cover art image. The model did not return a valid image or media URL.';
       if (textOutput) {
@@ -93,3 +89,4 @@ const generateCoverArtFlow = ai.defineFlow(
     };
   }
 );
+
