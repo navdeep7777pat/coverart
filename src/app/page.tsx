@@ -100,7 +100,7 @@ export default function ArtifyPage() {
                 name="songTitle"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="songTitle" className="text-foreground">Song Title</FormLabel>
+                    <FormLabel htmlFor="songTitle" className="text-foreground text-lg">Song Title</FormLabel>
                     <FormControl>
                       <Input id="songTitle" placeholder="e.g., Midnight Echoes" {...field} className="focus:ring-accent focus:border-accent" />
                     </FormControl>
