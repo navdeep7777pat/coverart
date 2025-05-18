@@ -50,9 +50,11 @@ const generateCoverArtFlow = ai.defineFlow(
     outputSchema: GenerateCoverArtOutputSchema,
   },
   async (input: GenerateCoverArtInput) => {
-    let promptText = `Generate cover art for the song "${input.songTitle}" by ${input.artistName}. The cover art should visually represent the song's theme. The background of the cover art must be in a realistic style.`;
+    let promptText = `Generate a truly realistic image for the cover art of the song "${input.songTitle}" by ${input.artistName}. The artwork should visually represent the song's theme. The overall style must be highly realistic, resembling a photograph.`;
     if (input.themeHint && input.themeHint.trim() !== "") {
-      promptText += ` The background theme or style should be inspired by: "${input.themeHint}".`;
+      promptText += ` The background theme or style should be inspired by: "${input.themeHint}". The background of the cover art must be in a realistic style.`;
+    } else {
+      promptText += ` The background of the cover art must be in a realistic style.`;
     }
     promptText += ` Please ensure the song title, "${input.songTitle}", is prominently displayed on the cover art itself, rendered in a large and artistically appropriate font. The image should be square (1:1 aspect ratio).`;
 
