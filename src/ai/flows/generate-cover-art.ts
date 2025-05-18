@@ -6,7 +6,7 @@
  *
  * - generateCoverArt - A function that handles the cover art generation process.
  * - GenerateCoverArtInput - The input type for the generateCoverArt function.
- * - GenerateCoverArtOutput - The return type for the generateCoverArt function.
+ * - GenerateCoverArtOutput - The return type for the generateCoverArtOutput function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -40,7 +40,7 @@ const _unusedPromptDefinition = ai.definePrompt({
   name: 'generateCoverArtTextPrompt', // Renamed to avoid confusion
   input: {schema: GenerateCoverArtInputSchema},
   output: {schema: GenerateCoverArtOutputSchema}, // This output schema might not be suitable if this prompt were used for direct image generation.
-  prompt: `Generate cover art for the song "{{{songTitle}}}" by {{{artistName}}}. The cover art should visually represent the song's theme. The background should be in a realistic style. {{#if themeHint}}The background theme should be inspired by: "{{{themeHint}}}".{{/if}} Please ensure the song title, "{{{songTitle}}}", is prominently displayed on the cover art itself, rendered in a large and artistically appropriate font.`,
+  prompt: `Generate cover art for the song "{{{songTitle}}}" by {{{artistName}}}. The cover art should visually represent the song's theme. The background should be in a realistic style. {{#if themeHint}}The background theme should be inspired by: "{{{themeHint}}}".{{/if}} Please ensure the song title, "{{{songTitle}}}", is prominently displayed on the cover art itself, rendered in a large and artistically appropriate font. Prioritize old, vintage, natural, and old-school styles. Backgrounds should be natural and realistic, as if created or captured by a human.`,
 });
 
 const generateCoverArtFlow = ai.defineFlow(
@@ -50,13 +50,17 @@ const generateCoverArtFlow = ai.defineFlow(
     outputSchema: GenerateCoverArtOutputSchema,
   },
   async (input: GenerateCoverArtInput) => {
-    let promptText = `Generate a truly realistic image for the cover art of the song "${input.songTitle}" by ${input.artistName}. The artwork should visually represent the song's theme. The overall style must be highly realistic, resembling a photograph.`;
+    let promptText = `Generate a truly realistic image for the cover art of the song "${input.songTitle}" by ${input.artistName}. `;
+    promptText += `The artwork should visually represent the song's theme. `;
+    promptText += `Prioritize old, vintage, natural, and old-school styles over modern, sleek, or overly digital aesthetics. `;
+    promptText += `The overall style must be highly realistic, resembling a photograph. `;
+    promptText += `Backgrounds, in particular, must be natural and realistic, evoking a sense of being created or captured by a human, not artificially generated. `;
+
     if (input.themeHint && input.themeHint.trim() !== "") {
-      promptText += ` The background theme or style should be inspired by: "${input.themeHint}". The background of the cover art must be in a realistic style.`;
-    } else {
-      promptText += ` The background of the cover art must be in a realistic style.`;
+      promptText += `The background theme or style should be inspired by: "${input.themeHint}". Integrate this theme in a way that maintains the natural, realistic, and vintage/old-school preference. `;
     }
-    promptText += ` Please ensure the song title, "${input.songTitle}", is prominently displayed on the cover art itself, rendered in a large and artistically appropriate font. The image should be square (1:1 aspect ratio).`;
+
+    promptText += `Please ensure the song title, "${input.songTitle}", is prominently displayed on the cover art itself, rendered in a large and artistically appropriate font that complements the overall vintage/natural style. The image should be square (1:1 aspect ratio).`;
 
     let responseFromAIGenerate;
     try {
