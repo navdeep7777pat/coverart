@@ -33,10 +33,13 @@ export async function generateCoverArt(input: GenerateCoverArtInput): Promise<Ge
   return generateCoverArtFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'generateCoverArtPrompt',
+// This prompt definition is currently not used by the generateCoverArtFlow below,
+// as the flow constructs its own prompt string for ai.generate.
+// It's kept here for potential future use or if the flow is refactored.
+const _unusedPromptDefinition = ai.definePrompt({
+  name: 'generateCoverArtTextPrompt', // Renamed to avoid confusion
   input: {schema: GenerateCoverArtInputSchema},
-  output: {schema: GenerateCoverArtOutputSchema},
+  output: {schema: GenerateCoverArtOutputSchema}, // This output schema might not be suitable if this prompt were used for direct image generation.
   prompt: `Generate cover art for the song "{{{songTitle}}}" by {{{artistName}}}. The cover art should visually represent the song's theme. The background should be in a realistic style. {{#if themeHint}}The background theme should be inspired by: "{{{themeHint}}}".{{/if}} Please ensure the song title, "{{{songTitle}}}", is prominently displayed on the cover art itself, rendered in a large and artistically appropriate font.`,
 });
 
@@ -53,32 +56,62 @@ const generateCoverArtFlow = ai.defineFlow(
     }
     promptText += ` Please ensure the song title, "${input.songTitle}", is prominently displayed on the cover art itself, rendered in a large and artistically appropriate font. The image should be square (1:1 aspect ratio).`;
 
-    const response = await ai.generate({
-      model: 'googleai/gemini-2.0-flash-exp',
-      prompt: promptText,
-      config: {
-        responseModalities: ['TEXT', 'IMAGE'],
-      },
-    });
+    let responseFromAIGenerate;
+    try {
+      responseFromAIGenerate = await ai.generate({
+        model: 'googleai/gemini-2.0-flash-exp',
+        prompt: promptText,
+        config: {
+          responseModalities: ['TEXT', 'IMAGE'],
+        },
+      });
+    } catch (error: any) {
+      console.error('Critical error during ai.generate call:', {
+        errorMessage: error.message,
+        // errorStack: error.stack, // Stack might be too verbose for typical user-facing errors
+        inputData: input,
+        constructedPrompt: promptText,
+        // rawError: error, // Avoid logging raw error if it might contain sensitive details not already in message/stack
+      });
+      
+      let userFriendlyMessage = "The AI image generator encountered a critical problem.";
+      if (error.message) {
+        if (error.message.includes("API key not valid") || error.message.includes("API_KEY_INVALID")) {
+          userFriendlyMessage = "The GOOGLE_API_KEY seems to be invalid. Please verify it in your .env file and ensure the Genkit server is restarted if changed.";
+        } else if (error.message.toLowerCase().includes("quota")) {
+          userFriendlyMessage = "It seems you've exceeded your API quota with the AI provider. Please check your account status.";
+        } else if (error.message.includes("ENOTFOUND") || error.message.includes("ECONNREFUSED")) {
+            userFriendlyMessage = "The AI service could not be reached. Check network connectivity and ensure the AI service is operational.";
+        } else if (error.message.includes("Deadline exceeded") || error.message.includes("timeout")) {
+            userFriendlyMessage = "The request to the AI service timed out. Please try again later.";
+        } else {
+            userFriendlyMessage = `An unexpected error occurred with the AI service. Details: ${error.message}`;
+        }
+      }
+      throw new Error(userFriendlyMessage);
+    }
 
-    const media = response.media;
+    const media = responseFromAIGenerate?.media;
 
     if (!media || !media.url) {
       console.error(
-        'Image generation failed or did not return a media URL.',
+        'Image generation call succeeded but no valid media URL was returned.',
         'Input:', input,
         'Prompt Text:', promptText,
-        'Response:', JSON.stringify(response, null, 2)
+        'Full Response (for debugging):', JSON.stringify(responseFromAIGenerate, null, 2)
       );
-      const textOutput = response.text;
-      let errorMessage = 'Failed to generate cover art image. The model did not return a valid image or media URL.';
+      
+      const textOutput = responseFromAIGenerate?.text;
+      let errorMessage = 'Failed to generate cover art: The model did not return a valid image.';
+      
       if (textOutput) {
         errorMessage += ` Model text response: ${textOutput}`;
       }
-       if (response.finishReason && response.finishReason !== 'STOP') {
-        errorMessage += ` Generation finished due to: ${response.finishReason}.`;
-        if (response.finishReason === 'SAFETY' || response.finishReason === 'BLOCKED') {
-          errorMessage += ' This might be due to safety filters. Try a different prompt.';
+      
+      if (responseFromAIGenerate?.finishReason && responseFromAIGenerate.finishReason !== 'STOP') {
+        errorMessage += ` Generation finished due to: ${responseFromAIGenerate.finishReason}.`;
+        if (responseFromAIGenerate.finishReason === 'SAFETY' || responseFromAIGenerate.finishReason === 'BLOCKED') {
+          errorMessage += ' This might be due to content safety filters. Try a different prompt or theme.';
         }
       }
       throw new Error(errorMessage);
