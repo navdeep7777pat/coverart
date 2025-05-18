@@ -40,7 +40,7 @@ const _unusedPromptDefinition = ai.definePrompt({
   name: 'generateCoverArtTextPrompt', // Renamed to avoid confusion
   input: {schema: GenerateCoverArtInputSchema},
   output: {schema: GenerateCoverArtOutputSchema}, // This output schema might not be suitable if this prompt were used for direct image generation.
-  prompt: `Generate cover art for the song "{{{songTitle}}}" by {{{artistName}}}. The cover art should visually represent the song's theme. The background should be in a realistic style. {{#if themeHint}}The background theme should be inspired by: "{{{themeHint}}}".{{/if}} Please ensure the song title, "{{{songTitle}}}", is prominently displayed on the cover art itself, rendered in a large and artistically appropriate font. Prioritize old, vintage, natural, and old-school styles. Backgrounds should be natural and realistic, as if created or captured by a human.`,
+  prompt: `Generate cover art for the song "{{{songTitle}}}" by {{{artistName}}}. The cover art should visually represent the song's theme. The background should be in a realistic style. {{#if themeHint}}The background theme should be inspired by: "{{{themeHint}}}".{{/if}} Please ensure the song title, "{{{songTitle}}}", is prominently displayed on the cover art itself, rendered in a large and artistically appropriate font. Prioritize old, vintage, natural, and old-school styles. Backgrounds should be natural and realistic, as if created or captured by a human. The image title is the priority, and its size should be the main focus—large and prominently displayed in the image.`,
 });
 
 const generateCoverArtFlow = ai.defineFlow(
@@ -60,7 +60,7 @@ const generateCoverArtFlow = ai.defineFlow(
       promptText += `The background theme or style should be inspired by: "${input.themeHint}". Integrate this theme in a way that maintains the natural, realistic, and vintage/old-school preference. `;
     }
 
-    promptText += `Please ensure the song title, "${input.songTitle}", is prominently displayed on the cover art itself, rendered in a large and artistically appropriate font that complements the overall vintage/natural style. The image should be square (1:1 aspect ratio).`;
+    promptText += `CRITICAL INSTRUCTION: The song title, "${input.songTitle}", MUST be the MAIN FOCUS of the image. It needs to be prominently displayed ON THE COVER ART itself, rendered in a LARGE and artistically appropriate font that complements the overall vintage/natural style. The image should be square (1:1 aspect ratio).`;
     
     let responseFromAIGenerate;
     try {
@@ -126,3 +126,4 @@ const generateCoverArtFlow = ai.defineFlow(
     };
   }
 );
+
