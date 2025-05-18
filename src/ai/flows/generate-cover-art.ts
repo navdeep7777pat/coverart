@@ -61,7 +61,7 @@ const generateCoverArtFlow = ai.defineFlow(
     }
 
     promptText += `Please ensure the song title, "${input.songTitle}", is prominently displayed on the cover art itself, rendered in a large and artistically appropriate font that complements the overall vintage/natural style. The image should be square (1:1 aspect ratio).`;
-
+    
     let responseFromAIGenerate;
     try {
       responseFromAIGenerate = await ai.generate({
@@ -74,10 +74,8 @@ const generateCoverArtFlow = ai.defineFlow(
     } catch (error: any) {
       console.error('Critical error during ai.generate call:', {
         errorMessage: error.message,
-        // errorStack: error.stack, // Stack might be too verbose for typical user-facing errors
         inputData: input,
         constructedPrompt: promptText,
-        // rawError: error, // Avoid logging raw error if it might contain sensitive details not already in message/stack
       });
       
       let userFriendlyMessage = "The AI image generator encountered a critical problem.";
@@ -96,7 +94,7 @@ const generateCoverArtFlow = ai.defineFlow(
       }
       throw new Error(userFriendlyMessage);
     }
-
+    
     const media = responseFromAIGenerate?.media;
 
     if (!media || !media.url) {
@@ -128,4 +126,3 @@ const generateCoverArtFlow = ai.defineFlow(
     };
   }
 );
-

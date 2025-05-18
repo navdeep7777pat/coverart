@@ -18,7 +18,7 @@ const GenerateThemeSuggestionInputSchema = z.object({
 export type GenerateThemeSuggestionInput = z.infer<typeof GenerateThemeSuggestionInputSchema>;
 
 const GenerateThemeSuggestionOutputSchema = z.object({
-  themeSuggestion: z.string().describe('A clear, simple, short (under 30 words), and easily editable theme suggestion for AI-based realistic image generation, focusing on mood, background, visual style, and thematic elements. It should only suggest objects and avoid any people or human figures. The background must be realistic.'),
+  themeSuggestion: z.string().describe('A clear, simple, short (under 30 words), and easily editable theme suggestion for AI-based realistic image generation. It should focus on mood, background, visual style (prioritizing old, vintage, natural, old-school, human-captured aesthetics), and thematic elements. It should only suggest objects and avoid any people or human figures. The background must be realistic and feel human-captured.'),
 });
 export type GenerateThemeSuggestionOutput = z.infer<typeof GenerateThemeSuggestionOutputSchema>;
 
@@ -30,21 +30,20 @@ const themePrompt = ai.definePrompt({
   name: 'suggestThemePrompt',
   input: {schema: GenerateThemeSuggestionInputSchema},
   output: {schema: GenerateThemeSuggestionOutputSchema},
-  prompt: `You are a creative cover art assistant for Spotify.
+  prompt: `You are a creative cover art assistant for Spotify, specializing in vintage, natural, and old-school aesthetics.
 You will receive a cover art title and an Artist Name (as subtitle).
-Based on this, generate a detailed visual concept for the cover art that can guide AI-based realistic image generation.
-Focus on mood, background setting, visual style, and relevant thematic elements.
+Based on this, generate a detailed visual concept for the cover art that would result in a **highly realistic, human-captured image if used as a prompt.**
+Focus on mood, background setting, visual style, and thematic elements that evoke an **old, vintage, natural, or old-school feel.** Avoid modern, sleek, or digital styles.
 
 Make sure the suggested theme matches the tone of the title.
-Keep the output under 30 words and make it editable by the user.
-The background should have only realistic images.
-No person should be created. Only objects will be used to create images.
-Explicitly avoid depicting any people or human figures. Focus on objects and environments.
+Keep the output concise (under 30 words) and easily editable by the user.
+The background MUST be **natural and realistic, as if created or captured by a human.**
+NO PEOPLE or human figures. Only objects and environments.
 
 Title: {{songTitle}}
 Artist Name (Subtitle): {{artistName}}
 
-Respond only with the theme suggestion in plain text.`,
+Respond only with the theme suggestion in plain text, emphasizing these stylistic qualities.`,
 });
 
 const suggestThemeFlow = ai.defineFlow(
